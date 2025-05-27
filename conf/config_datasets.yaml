@@ -28,65 +28,65 @@ dataset:
 
 indices:
   pr:
-    # - name: daily_pr_intensity
-    #   function: xclim.indices.daily_pr_intensity
-    #   variables: [pr]
-    #   args:
-    #     thresh: "10 mm/day"
-    #     freq: "YS"
-    #     op: ">="
+    - name: daily_pr_intensity
+      function: xclim.indices.daily_pr_intensity
+      variables: [pr]
+      args:
+        thresh: "10 mm/day"
+        freq: "YS"
+        op: ">="
 
-    # - name: Rx1day
-    #   function: xclim.indices.max_n_day_precipitation_amount
-    #   variables: [pr]
-    #   args:
-    #     window: 1
-    #     freq: "YS"
+    - name: Rx1day
+      function: xclim.indices.max_n_day_precipitation_amount
+      variables: [pr]
+      args:
+        window: 1
+        freq: "YS"
 
-    # - name: Rx3day
-    #   function: xclim.indices.max_n_day_precipitation_amount
-    #   variables: [pr]
-    #   args:
-    #     window: 3
-    #     freq: "YS"
+    - name: Rx3day
+      function: xclim.indices.max_n_day_precipitation_amount
+      variables: [pr]
+      args:
+        window: 3
+        freq: "YS"
 
-    # - name: dry_days
-    #   function: xclim.indices.dry_days
-    #   variables: [pr]
-    #   args:
-    #     thresh: "0.2 mm/d"
-    #     freq: "YS"
-    #     op: "<"
+    - name: dry_days
+      function: xclim.indices.dry_days
+      variables: [pr]
+      args:
+        thresh: "0.2 mm/d"
+        freq: "YS"
+        op: "<"
 
-    # - name: dry_spell_frequency
-    #   function: xclim.indices.dry_spell_frequency
-    #   variables: [pr]
-    #   args:
-    #     thresh: "1.0 mm"
-    #     window: 3
-    #     freq: "YS"
-    #     resample_before_rl: true
-    #     op: "sum"
+    - name: dry_spell_frequency
+      function: xclim.indices.dry_spell_frequency
+      variables: [pr]
+      args:
+        thresh: "1.0 mm"
+        window: 3
+        freq: "YS"
+        resample_before_rl: true
+        op: "sum"
 
-    # - name: dry_spell_max_length
-    #   function: xclim.indices.dry_spell_max_length
-    #   variables: [pr]
-    #   args:
-    #     thresh: "1.0 mm"
-    #     window: 3
-    #     freq: "YS"
-    #     resample_before_rl: true
-    #     op: "sum"
+    - name: dry_spell_max_length
+      function: xclim.indices.dry_spell_max_length
+      variables: [pr]
+      args:
+        thresh: "1.0 mm"
+        window: 3
+        freq: "YS"
+        resample_before_rl: true
+        op: "sum"
 
-    # - name: dry_spell_total_length
-    #   function: xclim.indices.dry_spell_total_length
-    #   variables: [pr]
-    #   args:
-    #     thresh: "1.0 mm"
-    #     window: 3
-    #     freq: "YS"
-    #     resample_before_rl: true
-    #     op: "sum"
+    - name: dry_spell_total_length
+      function: xclim.indices.dry_spell_total_length
+      variables: [pr]
+      args:
+        thresh: "1.0 mm"
+        window: 3
+        freq: "YS"
+        resample_before_rl: true
+        op: "sum"
 
     - name: r75p
       function: xclim.indices.days_over_precip_thresh
@@ -103,20 +103,20 @@ indices:
               dim: time
               keep_attrs: true
 
-    # - name: f75p
-    #   function: xclim.indices.fraction_over_precip_thresh
-    #   variables: [pr, p75]
-    #   args:
-    #     freq: 'YS'
-    #   preprocess:
-    #     quantiles:
-    #       p75:
-    #         input: pr
-    #         operation: quantile
-    #         kwargs:
-    #           q: 0.75
-    #           dim: time
-    #           keep_attrs: true
+    - name: f75p
+      function: xclim.indices.fraction_over_precip_thresh
+      variables: [pr, p75]
+      args:
+        freq: 'YS'
+      preprocess:
+        quantiles:
+          p75:
+            input: pr
+            operation: quantile
+            kwargs:
+              q: 0.75
+              dim: time
+              keep_attrs: true
 
 output:
   zarr_pattern: "{name}_{start}-{end}_{freq}.zarr"

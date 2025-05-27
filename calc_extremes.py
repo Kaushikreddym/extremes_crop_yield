@@ -64,7 +64,7 @@ def main(cfg: DictConfig):
             result = func(*inputs, **args)
         else:
             result = func(climate_data["pr"], **args)
-        ipdb.set_trace()
+        # ipdb.set_trace()
         # Save result to zarr
         freq = args.get("freq", "YS")
         zarr_filename = cfg.output.zarr_pattern.format(
