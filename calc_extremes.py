@@ -64,7 +64,7 @@ def main(cfg: DictConfig):
             end=cfg.output.end,
             freq=args["freq"]
         )
-
+        # add commit
         result.to_zarr(zarr_filename, mode="w")
 if __name__ == "__main__":
     main()
