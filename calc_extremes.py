@@ -1,70 +1,73 @@
 import hydra
 from omegaconf import DictConfig
 from datasets.datasets import *
-import ipdb
 import importlib
 
 @hydra.main(config_path="conf", config_name="config_datasets", version_base="1.3")
-def main(cfg: DictConfig):    
+def main(cfg: DictConfig):
     bounds = cfg.dataset.GDHY.bounds
 
-    data_path = cfg.dataset.GDHY.path
-    yield_data = load_GDHY(data_path, bounds)
-    
-    data_path = cfg.dataset.SAGE.path
-    crop_cal_data = load_SAGE(data_path, bounds)
+    # Load primary datasets
+    yield_data = load_GDHY(cfg.dataset.GDHY.path, bounds)
+    crop_cal_data = load_SAGE(cfg.dataset.SAGE.path, bounds)
     crop_cal_data_50km = regrid(crop_cal_data, yield_data)
 
-    climate_data = []
-    config = cfg.dataset.MSWX
+    # Load and regrid climate data
     climate_data = {}
-    for name, attrs in config.variables.items():
-        # ipdb.set_trace()
+    for name, attrs in cfg.dataset.MSWX.variables.items():
         ds = load_MSWX_zarr(attrs.path, name, attrs.var_name)
         ds_regrid = regrid(ds, yield_data)
         ds_mask = mask_crop_cal(ds_regrid, crop_cal_data_50km)
 
+        # Ensure consistent units
         if attrs.var_name == 'precipitation':
             ds_mask.attrs['units'] = 'mm/day'
         elif attrs.var_name == 'air_temperature':
             ds_mask.attrs['units'] = 'degC'
-        ds_mask = ds_mask.to_dataset(name=name)
-        climate_data[name] = ds_mask
-    # climate_data = xr.merge(climate_data)
-    # print(f"Loaded variables: {list(climate_data.keys())}")
-    # 
-    
-    derived = {"pr": climate_data['pr']}
+
+        # Store single variable dataset
+        climate_data[name] = ds_mask[name]
+
     for index_cfg in cfg.indices.pr:
         name = index_cfg.name
         func_path = index_cfg.function
-        args = index_cfg.args
-        
+        args = dict(index_cfg.args)
+
+        # Handle preprocessing
         if "preprocess" in index_cfg:
-            for group, variables in index_cfg.preprocess.items():
+            for _, variables in index_cfg.preprocess.items():
                 for var_name, task in variables.items():
-                    input_var = derived[task["input"]]
+                    input_var = climate_data[task["input"]]
                     op = getattr(input_var, task["operation"])
                     result = op(**task.get("kwargs", {}))
-                    derived[var_name] = result
+                    climate_data[var_name] = result
 
-        # Resolve any references in args (e.g., ${quantiles.p75})
+        # Resolve references in args
         for key, val in args.items():
             if isinstance(val, str) and val.startswith("${"):
                 ref = val.strip("${}").split(".")[-1]
-                args[key] = derived[ref]
+                args[key] = climate_data[ref]
 
+        # Load and call function
         module_name, func_name = func_path.rsplit(".", 1)
         func = getattr(importlib.import_module(module_name), func_name)
-        result = func(climate_data['pr'], **args)
-        
+
+        # Multiple variable support
+        if hasattr(index_cfg, "variables"):
+            inputs = [climate_data[v] for v in index_cfg.variables]
+            result = func(*inputs, **args)
+        else:
+            result = func(climate_data["pr"], **args)
+
+        # Save result to zarr
+        freq = args.get("freq", "YS")
         zarr_filename = cfg.output.zarr_pattern.format(
             name=name,
             start=cfg.output.start,
             end=cfg.output.end,
-            freq=args["freq"]
+            freq=freq
         )
-        # add commit
         result.to_zarr(zarr_filename, mode="w")
+
 if __name__ == "__main__":
     main()
