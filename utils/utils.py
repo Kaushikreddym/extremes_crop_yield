@@ -59,3 +59,35 @@ def is_chunk_available(zarr_path, time_range=None, lat_range=None, lon_range=Non
         return False
 
     return True
+
+from dask_jobqueue import SLURMCluster
+from dask.distributed import Client
+import socket
+
+def setup_slurm_cluster():
+    cluster = SLURMCluster(
+        queue="compute",  # or your SLURM partition name
+        project="your_project",  # optional, depends on your HPC
+        cores=8,  # number of cores per worker
+        memory="16GB",  # memory per worker
+        walltime="02:00:00",  # job walltime
+        interface="ib0",  # or appropriate network interface (e.g., eth0, enp1s0)
+        job_extra=[
+            "--exclusive",  # optional: one job per node
+            "--qos=normal"  # adjust QoS if needed
+        ],
+        job_script_prologue=[
+            "module load anaconda",       # load necessary modules
+            "source activate myenv",      # activate your conda/venv
+        ],
+        local_directory="/scratch/$USER/dask-workers",  # temp dir for dask workers
+        log_directory="./dask_logs"  # local log folder
+    )
+
+    # Scale the cluster (e.g., 10 workers = 10 SLURM jobs)
+    cluster.scale(jobs=10)
+
+    # Attach a client to it
+    client = Client(cluster)
+    print("Dask dashboard:", client.dashboard_link)
+    return client

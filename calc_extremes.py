@@ -2,9 +2,15 @@ import hydra
 from omegaconf import DictConfig
 from datasets.datasets import *
 import importlib
+from dask.distributed import Client, performance_report
+import ipdb
 
 @hydra.main(config_path="conf", config_name="config_datasets", version_base="1.3")
 def main(cfg: DictConfig):
+    # Set up Dask client (adapt based on your HPC environment)
+    client = Client(n_workers=10, threads_per_worker=8, memory_limit="8GB")  # ~80 logical cores
+    print(client)
+
     bounds = cfg.dataset.GDHY.bounds
 
     # Load primary datasets
@@ -26,7 +32,7 @@ def main(cfg: DictConfig):
             ds_mask.attrs['units'] = 'degC'
 
         # Store single variable dataset
-        climate_data[name] = ds_mask[name]
+        climate_data[name] = ds_mask
 
     for index_cfg in cfg.indices.pr:
         name = index_cfg.name
@@ -58,7 +64,7 @@ def main(cfg: DictConfig):
             result = func(*inputs, **args)
         else:
             result = func(climate_data["pr"], **args)
-
+        ipdb.set_trace()
         # Save result to zarr
         freq = args.get("freq", "YS")
         zarr_filename = cfg.output.zarr_pattern.format(
