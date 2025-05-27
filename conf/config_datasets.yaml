@@ -1,0 +1,276 @@
+dataset:
+  bounds: &europe_bounds
+    lat_min: 34.5
+    lat_max: 71.2
+    lon_min: -25.0
+    lon_max: 30.0
+  GDHY:
+    path: /beegfs/muduchuru/data/GDHY
+    bounds: *europe_bounds
+  SAGE:
+    path: "/beegfs/muduchuru/data/SAGE_crop_calendar/Wheat.crop.calendar.fill.nc.gz"
+    bounds: *europe_bounds
+  MSWX:
+    bounds: *europe_bounds
+    variables:
+      pr: 
+        path: '/beegfs/muduchuru/data/MSWX/zarr/pr_mswep_daily_1989-2020.zarr'
+        var_name: precipitation
+      tasmin: 
+        path: '/beegfs/muduchuru/data/MSWX/zarr/tasmin_mswx_daily_1989-2020.zarr'
+        var_name: air_temperature
+      tasmax: 
+        path: '/beegfs/muduchuru/data/MSWX/zarr/tasmax_mswx_daily_1989-2020.zarr'
+        var_name: air_temperature
+    time_range:  # Specify the desired temporal range
+      start: "2000-01-01"
+      end: "2010-12-31"
+indices:
+  pr:
+    - name: daily_pr_intensity
+      function: xclim.indices.daily_pr_intensity
+      args:
+        thresh: "10 mm/day"
+        freq: "YS"
+        op: ">="
+    - name: Rx1day
+      function: xclim.indices.max_n_day_precipitation_amount
+      args:
+        window: 1
+        freq: "YS"
+    - name: Rx3day
+      function: xclim.indices.max_n_day_precipitation_amount
+      args:
+        window: 3
+        freq: "YS"
+    - name: dry_days
+      function: xclim.indices.dry_days
+      args:
+        thresh: "0.2 mm/d"
+        freq: "YS"
+        op: "<"
+    - name: dry_spell_frequency
+      function: xclim.indices.dry_spell_frequency
+      args:
+        thresh: "1.0 mm"
+        window: 3
+        freq: "YS"
+        resample_before_rl: true
+        op: "sum"
+    - name: dry_spell_max_length
+      function: xclim.indices.dry_spell_max_length
+      args:
+        thresh: "1.0 mm"
+        window: 3
+        freq: "YS"
+        resample_before_rl: true
+        op: "sum"
+    - name: dry_spell_total_length
+      function: xclim.indices.dry_spell_total_length
+      args:
+        thresh: "1.0 mm"
+        window: 3
+        freq: "YS"
+        resample_before_rl: true
+        op: "sum"
+    - name: r75p
+      function: xclim.indices.days_over_precip_thresh
+      args:
+        thresh: ${quantiles.p75}
+      preprocess:
+        quantiles:
+          p75:
+            input: pr
+            operation: quantile
+            kwargs:
+              q: 0.75
+              dim: time
+              keep_attrs: true
+    - name: f75p
+      function: xclim.indices.fraction_over_precip_thresh
+      args:
+        thresh: ${quantiles.p75}
+        
+      preprocess:
+        quantiles:
+          p75:
+            input: pr
+            operation: quantile
+            kwargs:
+              q: 0.75
+              dim: time
+              keep_attrs: true
+output:
+  zarr_pattern: "{name}_{start}-{end}_{freq}.zarr"
+  start: 1989
+  end: 2019
+xclim_indices:
+  - australian_hardiness_zones
+  - biologically_effective_degree_days
+  - calm_days
+  - cffwis_indices
+  - chill_portions
+  - chill_units
+  - cold_and_dry_days
+  - cold_and_wet_days
+  - cold_spell_days
+  - cold_spell_duration_index
+  - cold_spell_frequency
+  - cold_spell_max_length
+  - cold_spell_total_length
+  - consecutive_frost_days
+  - cool_night_index
+  - cooling_degree_days
+  - corn_heat_units
+  - daily_freezethaw_cycles
+  - daily_pr_intensity
+  - daily_temperature_range
+  - daily_temperature_range_variability
+  - days_over_precip_doy_thresh
+  - days_over_precip_thresh
+  - days_with_snow
+  - degree_days_exceedance_date
+  - drought_code
+  - dry_days
+  - dry_spell_frequency
+  - dry_spell_max_length
+  - dry_spell_total_length
+  - dryness_index
+  - duff_moisture_code
+  - extreme_temperature_range
+  - fire_season
+  - first_day_tg_above
+  - first_day_tg_below
+  - first_day_tn_above
+  - first_day_tn_below
+  - first_day_tx_above
+  - first_day_tx_below
+  - first_snowfall
+  - fraction_over_precip_doy_thresh
+  - fraction_over_precip_thresh
+  - freezethaw_spell_frequency
+  - freezethaw_spell_max_length
+  - freezethaw_spell_mean_length
+  - freezing_degree_days
+  - freshet_start
+  - frost_days
+  - frost_free_season_end
+  - frost_free_season_length
+  - frost_free_season_start
+  - frost_free_spell_max_length
+  - frost_season_length
+  - griffiths_drought_factor
+  - growing_degree_days
+  - growing_season_end
+  - growing_season_length
+  - growing_season_start
+  - heat_index
+  - heat_spell_frequency
+  - heat_spell_max_length
+  - heat_spell_total_length
+  - heat_wave_frequency
+  - heat_wave_index
+  - heat_wave_max_length
+  - heat_wave_total_length
+  - heating_degree_days
+  - high_precip_low_temp
+  - hot_spell_frequency
+  - hot_spell_max_length
+  - hot_spell_max_magnitude
+  - hot_spell_total_length
+  - huglin_index
+  - humidex
+  - ice_days
+  - jetstream_metric_woollings
+  - keetch_byram_drought_index
+  - last_snowfall
+  - last_spring_frost
+  - late_frost_days
+  - latitude_temperature_index
+  - liquid_precip_accumulation
+  - liquid_precip_average
+  - liquid_precip_ratio
+  - longwave_upwelling_radiation_from_net_downwelling
+  - max_1day_precipitation_amount
+  - max_daily_temperature_range
+  - max_n_day_precipitation_amount
+  - max_pr_intensity
+  - maximum_consecutive_dry_days
+  - maximum_consecutive_frost_free_days
+  - maximum_consecutive_warm_days
+  - maximum_consecutive_wet_days
+  - mcarthur_forest_fire_danger_index
+  - mean_radiant_temperature
+  - potential_evapotranspiration
+  - precip_accumulation
+  - precip_average
+  - rain_approximation
+  - rain_on_frozen_ground_days
+  - rain_season
+  - relative_humidity
+  - relative_humidity_from_dewpoint
+  - rprctot
+  - saturation_vapor_pressure
+  - sfcWind_max
+  - sfcWind_mean
+  - sfcWind_min
+  - sfcWindmax_max
+  - sfcWindmax_mean
+  - sfcWindmax_min
+  - shortwave_upwelling_radiation_from_net_downwelling
+  - snowfall_approximation
+  - snowfall_frequency
+  - snowfall_intensity
+  - solid_precip_accumulation
+  - solid_precip_average
+  - specific_humidity
+  - specific_humidity_from_dewpoint
+  - standardized_precipitation_evapotranspiration_index
+  - standardized_precipitation_index
+  - tg
+  - tg10p
+  - tg90p
+  - tg_days_above
+  - tg_days_below
+  - tg_max
+  - tg_mean
+  - tg_min
+  - thawing_degree_days
+  - tn10p
+  - tn90p
+  - tn_days_above
+  - tn_days_below
+  - tn_max
+  - tn_mean
+  - tn_min
+  - tropical_nights
+  - tx10p
+  - tx90p
+  - tx_days_above
+  - tx_days_below
+  - tx_max
+  - tx_mean
+  - tx_min
+  - tx_tn_days_above
+  - universal_thermal_climate_index
+  - usda_hardiness_zones
+  - vapor_pressure_deficit
+  - warm_and_dry_days
+  - warm_and_wet_days
+  - warm_spell_duration_index
+  - water_budget
+  - water_budget_from_tas
+  - water_cycle_intensity
+  - wet_precip_accumulation
+  - wet_spell_frequency
+  - wet_spell_max_length
+  - wet_spell_total_length
+  - wetdays
+  - wetdays_prop
+  - wind_chill_index
+  - wind_power_potential
+  - wind_profile
+  - wind_speed_from_vector
+  - wind_vector_from_speed
+  - windy_days
+
