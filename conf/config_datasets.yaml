@@ -35,21 +35,18 @@ indices:
         thresh: "10 mm/day"
         freq: "YS"
         op: ">="
-
     - name: Rx1day
       function: xclim.indices.max_n_day_precipitation_amount
       variables: [pr]
       args:
         window: 1
         freq: "YS"
-
     - name: Rx3day
       function: xclim.indices.max_n_day_precipitation_amount
       variables: [pr]
       args:
         window: 3
         freq: "YS"
-
     - name: dry_days
       function: xclim.indices.dry_days
       variables: [pr]
@@ -57,7 +54,6 @@ indices:
         thresh: "0.2 mm/d"
         freq: "YS"
         op: "<"
-
     - name: dry_spell_frequency
       function: xclim.indices.dry_spell_frequency
       variables: [pr]
@@ -67,7 +63,6 @@ indices:
         freq: "YS"
         resample_before_rl: true
         op: "sum"
-
     - name: dry_spell_max_length
       function: xclim.indices.dry_spell_max_length
       variables: [pr]
@@ -77,7 +72,6 @@ indices:
         freq: "YS"
         resample_before_rl: true
         op: "sum"
-
     - name: dry_spell_total_length
       function: xclim.indices.dry_spell_total_length
       variables: [pr]
@@ -87,7 +81,6 @@ indices:
         freq: "YS"
         resample_before_rl: true
         op: "sum"
-
     - name: r75p
       function: xclim.indices.days_over_precip_thresh
       variables: [pr, p75]
@@ -102,7 +95,6 @@ indices:
               q: 0.75
               dim: time
               keep_attrs: true
-
     - name: f75p
       function: xclim.indices.fraction_over_precip_thresh
       variables: [pr, p75]
@@ -117,6 +109,88 @@ indices:
               q: 0.75
               dim: time
               keep_attrs: true
+    - name: max_cdd
+      function: xclim.indices.maximum_consecutive_dry_days
+      variables: [pr]
+      args:
+        freq: 'YS'
+        thresh: '1 mm/day'
+    - name: max_cwd
+      function: xclim.indices.maximum_consecutive_wet_days
+      variables: [pr]
+      args:
+        freq: 'YS'
+        thresh: '1 mm/day'
+    - name: prcptot
+      function: xclim.indices.prcptot
+      variables: [pr]
+      args:
+        freq: 'YS'
+        thresh: '0 mm/day'
+    - name: precip_seasonality
+      function: xclim.indices.precip_seasonality
+      variables: [pr]
+      args:
+        freq: 'YS'
+    - name: SPI1
+      function: xclim.indices.standardized_precipitation_index
+      variables: [pr]
+      args:
+        freq: 'MS'
+        window: 1
+        dist: 'gamma'
+    - name: SPI3
+      function: xclim.indices.standardized_precipitation_index
+      variables: [pr]
+      args:
+        freq: 'MS'
+        window: 3
+        dist: 'gamma'
+    - name: SPI6
+      function: xclim.indices.standardized_precipitation_index
+      variables: [pr]
+      args:
+        freq: 'MS'
+        window: 6
+        dist: 'gamma'
+    - name: wet_spell_frequency
+      function: xclim.indices.wet_spell_frequency
+      variables: [pr]
+      args:
+        freq: 'YS'
+        window: 3
+        thresh: '10.0 mm'
+        op: 'sum'
+    - name: wet_spell_max_length
+      function: xclim.indices.wet_spell_max_length
+      variables: [pr]
+      args:
+        freq: 'YS'
+        window: 3
+        thresh: '10.0 mm'
+        op: 'sum'
+    - name: wet_spell_total_length
+      function: xclim.indices.wet_spell_total_length
+      variables: [pr]
+      args:
+        freq: 'YS'
+        window: 3
+        thresh: '10.0 mm'
+        op: 'sum'
+    - name: wetdays
+      function: xclim.indices.wetdays
+      variables: [pr]
+      args:
+        freq: 'YS'
+        thresh: '3.0 mm/day'
+        op: '>='
+    - name: wetdays_prop
+      function: xclim.indices.wetdays_prop
+      variables: [pr]
+      args:
+        freq: 'YS'
+        thresh: '3.0 mm/day'
+        op: '>='
 
 output:
   zarr_pattern: "{name}_{start}-{end}_{freq}.zarr"
