@@ -191,7 +191,6 @@ indices:
         freq: 'YS'
         thresh: '3.0 mm/day'
         op: '>='
-
 output:
   zarr_pattern: "{name}_{start}-{end}_{freq}.zarr"
   start: 1989
