@@ -63,7 +63,13 @@ def is_chunk_available(zarr_path, time_range=None, lat_range=None, lon_range=Non
 from dask_jobqueue import SLURMCluster
 from dask.distributed import Client
 import socket
-
+def subset_by_bounds(ds, bounds, lat_name='lat', lon_name='lon'):
+    return ds.sel(
+        **{
+            lat_name: slice(bounds['lat_max'], bounds['lat_min']),
+            lon_name: slice(bounds['lon_min'], bounds['lon_max'])
+        }
+    )
 def setup_slurm_cluster():
     cluster = SLURMCluster(
         queue="compute",  # or your SLURM partition name
