@@ -46,6 +46,10 @@ def main(cfg: DictConfig):
                     input_var = climate_data[task["input"]]
                     op = getattr(input_var, task["operation"])
                     result = op(**task.get("kwargs", {}))
+                    # Add aggregation if specified
+                    agg_func = task.get("aggregation", None)
+                    if agg_func:
+                        result = getattr(result, agg_func)()
                     climate_data[var_name] = result
 
         # Resolve references in args

@@ -191,6 +191,184 @@ indices:
         freq: 'YS'
         thresh: '3.0 mm/day'
         op: '>='
+  tas:
+    - name: heat_wave_index
+      function: xclim.indices.heat_wave_index
+      variables: [tasmax]
+      args:
+        freq: 'YS'
+        thresh: '25 degC'
+        window: 5
+    - name: heat_wave_frequency
+      function: xclim.indices.heat_wave_frequency
+      variables: [tasmin, tasmax]
+      args:
+        freq: 'YS'
+        window: 3
+    - name: heat_wave_max_length
+      function: xclim.indices.heat_wave_max_length
+      variables: [tasmin, tasmax]
+      args:
+        freq: 'YS'
+        window: 3
+    - name: heat_wave_total_length
+      function: xclim.indices.heat_wave_total_length
+      variables: [tasmin, tasmax]
+      args:
+        freq: 'YS'
+        window: 3
+    - name: heating_degree_days
+      function: xclim.indices.heating_degree_days
+      variables: [tas]
+      args:
+        freq: 'YS'
+        thresh: '17 degC'
+    - name: hot_spell_frequency
+      function: xclim.indices.hot_spell_frequency
+      variables: [tasmax]
+      args:
+        freq: 'YS'
+        window: 3
+    - name: hot_spell_max_length
+      function: xclim.indices.hot_spell_max_length
+      variables: [tasmax]
+      args:
+        freq: 'YS'
+        window: 3
+    - name: hot_spell_total_length
+      function: xclim.indices.hot_spell_total_length
+      variables: [tasmax]
+      args:
+        freq: 'YS'
+        window: 3
+    - name: hot_spell_max_magnitude
+      function: xclim.indices.hot_spell_max_magnitude
+      variables: [tasmax]
+      args:
+        freq: 'YS'
+        window: 3
+    - name: huglin_index
+      function: xclim.indices.huglin_index
+      variables: [tas, tasmax]
+      args:
+        freq: 'YS'
+    - name: ice_days
+      function: xclim.indices.ice_days
+      variables: [tasmax]
+      args:
+        freq: 'YS'
+        thresh: '0 degC'
+    - name: isothermality
+      function: xclim.indices.isothermality
+      variables: [tasmin, tasmax]
+      args:
+        freq: 'YS'
+    - name: keetch_byram_drought_index
+      function: xclim.indices.keetch_byram_drought_index
+      variables: [pr, tasmax, pr_annual]
+      args:
+        freq: 'YS'
+      preprocess:
+        annual:
+          pr_annual:
+            input: pr
+            operation: resample
+            kwargs:
+              dim: time
+              keep_attrs: true
+            aggregation: sum
+    - name: maximum_consecutive_frost_days
+      function: xclim.indices.maximum_consecutive_frost_days
+      variables: [tasmin]
+      args:
+        freq: 'YS'
+        thresh: '0 degC'
+    - name: maximum_consecutive_frost_free_days
+      function: xclim.indices.maximum_consecutive_frost_free_days
+      variables: [tasmin]
+      args:
+        freq: 'YS'
+        thresh: '0 degC'
+    - name: maximum_consecutive_tx_days
+      function: xclim.indices.maximum_consecutive_tx_days
+      variables: [tasmax]
+      args:
+        freq: 'YS'
+        thresh: '25 degC'
+    - name: temperature_seasonality
+      function: xclim.indices.temperature_seasonality
+      variables: [tas]
+      args:
+        freq: 'YS'
+    - name: tg_10p
+      function: xclim.indices.tg_10p
+      variables: [tas, tas_per]
+      args:
+        freq: 'YS'
+      preprocess:
+        quantiles:
+          tas_per:
+            input: tas
+            operation: quantile
+            kwargs:
+              q: 0.10
+              dim: time
+              keep_attrs: true
+    - name: tg_90p
+      function: xclim.indices.tg_90p
+      variables: [tas,tas_per]
+      args:
+        freq: 'YS'
+      preprocess:
+        quantiles:
+          tas_per:
+            input: tas
+            operation: quantile
+            kwargs:
+              q: 0.90
+              dim: time
+              keep_attrs: true 
+    - name: tg_days_above_10degC
+      function: xclim.indices.tg_days_above
+      variables: [tas]
+      args:
+        freq: 'YS'
+        thresh: '10 degC'
+        op: '>='
+    - name: tg_days_below_10degC
+      function: xclim.indices.tg_days_below
+      variables: [tas]
+      args:
+        freq: 'YS'
+        thresh: '10 degC'
+        op: '<='
+    - name: warmest_quarter
+      function: xclim.indices.tg_mean_warmcold_quarter
+      variables: [tas]
+      args:
+        op: warmest
+        freq: YS
+    - name: coldest_quarter
+      function: xclim.indices.tg_mean_warmcold_quarter
+      variables: [tas]
+      args:
+        op: coldest
+        freq: YS
+    - name: tn10p
+      function: xclim.indices.tn_10p
+      variables: [tasmin, tasmin_per]
+      args:
+        freq: 'YS'
+      preprocess:
+        quantiles:
+          tasmin_per:
+            input: tasmin
+            operation: quantile
+            kwargs:
+              q: 0.10
+              dim: time
+              keep_attrs: true
+              
 output:
   zarr_pattern: "{name}_{start}-{end}_{freq}.zarr"
   start: 1989
