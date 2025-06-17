@@ -59,7 +59,7 @@ def main(cfg: DictConfig):
                 end=cfg.output.end,
                 freq=freq
             )
-            result.to_zarr(zarr_filename, mode="w")
+            result.to_zarr('data/'+zarr_filename, mode="w")
             return
 
 if __name__ == "__main__":
