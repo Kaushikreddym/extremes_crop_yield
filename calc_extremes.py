@@ -8,7 +8,7 @@ import ipdb
 @hydra.main(config_path="conf", config_name="config_datasets", version_base="1.3")
 def main(cfg: DictConfig):
     # Set up Dask client (adapt based on your HPC environment)
-    client = Client(n_workers=10, threads_per_worker=8, memory_limit="8GB")  # ~80 logical cores
+    client = Client(n_workers=40, threads_per_worker=2, memory_limit="80GB")  # ~80 logical cores
     print(client)
 
     bounds = cfg.dataset.GDHY.bounds
@@ -34,7 +34,7 @@ def main(cfg: DictConfig):
         # Store single variable dataset
         climate_data[name] = ds_mask
 
-    for index_cfg in cfg.indices.pr:
+    for index_cfg in cfg.indices.tas:
         name = index_cfg.name
         func_path = index_cfg.function
         args = dict(index_cfg.args)

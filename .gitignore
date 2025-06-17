@@ -188,4 +188,6 @@ cython_debug/
 .cursorindexingignore
 
 *.zarr
+*.ipynb
 outputs/
+logs/
