@@ -1,0 +1,108 @@
+google_service_account: /beegfs/muduchuru/codes/python/download/conf/service.json
+datasets:
+  MSWX:
+    type: 'global'
+    subsetting: 'None'
+    output_dir: "/beegfs/muduchuru/data/MSWX_NC/1D"
+    variables:
+    - name: tasmin
+      folder_id: 1_h0hgJThJLXhVOk905IJ7EFpkFV5KDSC
+    - name: tasmax
+      folder_id: 1BKvHhO1JsBKKzMPCbzl5UpvqpRXHTj9c
+    - name: tas
+      folder_id: 10l3ThTEkabK0yfk7DvpEcNgXkhbF9NNt
+    - name: pr
+      folder_id: 1gWoZ2bK2u5osJ8Iw-dvguZ56Kmz2QWrL
+    - name: rsds
+      folder_id: 1usXbIOi4_jBUdDaZbzPKXznx9PTYzHRv
+  dwd_HYRAS:
+    variables:
+    - name: air_temperature
+      base_url: "https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/hourly/air_temperature/historical/"
+      file_extension: ".zip"
+      output_dir: "/data01/FDS/muduchuru/Observations/DWD/tasmean/"
+    - name: precipitation
+      base_url: "https://opendata.dwd.de/climate_environment/CDC/observations_germany/climate/hourly/precipitation/historical/"
+      file_extension: ".zip"
+      output_dir: "/data01/FDS/muduchuru/Observations/DWD/pr"
+  ERA5_pressure_daily:
+    zarr_store_path: "./zarr_data"
+    hdf5_store_path: "./hdf5_data"
+    dt: 1
+    start_year: 1980
+    end_year: 2015
+    compute_mean_std: True
+    variables:
+      - "10m_u_component_of_wind"
+      - "10m_v_component_of_wind"
+      - "2m_temperature"
+      - "surface_pressure"
+      - "mean_sea_level_pressure"
+      - ["t", 850]
+      - ["u", 1000]
+      - ["v", 1000]
+      - ["z", 1000]
+      - ["u", 850]
+      - ["v", 850]
+      - ["z", 850]
+      - ["u", 500]
+      - ["v", 500]
+      - ["z", 500]
+      - ["t", 500]
+      - ["z", 50]
+      - ["r", 500]
+      - ["r", 850]
+      - "total_column_water_vapour"
+      - "100m_u_component_of_wind"
+      - "100m_v_component_of_wind"
+      - ["u", 250]
+      - ["v", 250]
+      - ["z", 250]
+      - ["t", 250]
+      - ["u", 100]
+      - ["v", 100]
+      - ["z", 100]
+      - ["t", 100]
+      - ["u", 900]
+      - ["v", 900]
+      - ["z", 900]
+      - ["t", 900]
+  # CMIP:
+  #   - name: tas
+  #     experiments: historical, hist-aer, hist-GHG
+  #     models:
+  #       - {dataset: CanESM2}
+  #       - {dataset: CESM1-BGC}
+  #       - {dataset: GFDL-ESM2G}
+  #       - {dataset: GFDL-ESM2M}
+  #       - {dataset: HadGEM2-CC}
+  #       - {dataset: HadGEM2-ES}
+  #       - {dataset: inmcm4}
+  #       - {dataset: IPSL-CM5A-LR}
+  #       - {dataset: IPSL-CM5A-MR}
+  #       - {dataset: IPSL-CM5B-LR}
+  #       - {dataset: MIROC-ESM}
+  #       - {dataset: MIROC-ESM-CHEM}
+  #       - {dataset: MPI-ESM-LR}
+  #       - {dataset: MPI-ESM-MR}
+  #       - {dataset: NorESM1-ME}
+  #   - name: pr
+  #     experiments: historical, hist-aer, hist-GHG
+  #     models:
+  #       - {dataset: CanESM2}
+  #       - {dataset: CESM1-BGC}
+  #       - {dataset: GFDL-ESM2G}
+  #       - {dataset: GFDL-ESM2M}
+  #       - {dataset: HadGEM2-CC}
+  #       - {dataset: HadGEM2-ES}
+  #       - {dataset: inmcm4}
+  #       - {dataset: IPSL-CM5A-LR}
+  #       - {dataset: IPSL-CM5A-MR}
+  #       - {dataset: IPSL-CM5B-LR}
+  #       - {dataset: MIROC-ESM}
+  #       - {dataset: MIROC-ESM-CHEM}
+  #       - {dataset: MPI-ESM-LR}
+  #       - {dataset: MPI-ESM-MR}
+  #       - {dataset: NorESM1-ME}
+
+# postprocess:

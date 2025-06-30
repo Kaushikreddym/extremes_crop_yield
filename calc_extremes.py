@@ -1,40 +1,44 @@
 import hydra
 from omegaconf import DictConfig
 from datasets.datasets import *
+from utils.utils import *
 import importlib
 from dask.distributed import Client, performance_report
 import ipdb
 
-@hydra.main(config_path="conf", config_name="config_datasets", version_base="1.3")
+@hydra.main(config_path="conf", config_name="config", version_base="1.3")
 def main(cfg: DictConfig):
     # Set up Dask client (adapt based on your HPC environment)
     client = Client(n_workers=40, threads_per_worker=2, memory_limit="80GB")  # ~80 logical cores
-    print(client)
 
-    bounds = cfg.dataset.GDHY.bounds
-
+    bounds = cfg.bounds
     # Load primary datasets
-    yield_data = load_GDHY(cfg.dataset.GDHY.path, bounds)
-    crop_cal_data = load_SAGE(cfg.dataset.SAGE.path, bounds)
-    crop_cal_data_50km = regrid(crop_cal_data, yield_data)
+    # yield_data = load_GDHY(cfg.dataset.GDHY.path, bounds)
+    crop_cal_data = load_SAGE(cfg.mappings.SAGE.path, bounds)
+    # crop_cal_data_50km = regrid(crop_cal_data, yield_data)
 
     # Load and regrid climate data
     climate_data = {}
-    for name, attrs in cfg.dataset.MSWX.variables.items():
-        ds = load_MSWX_zarr(attrs.path, name, attrs.var_name)
-        ds_regrid = regrid(ds, yield_data)
-        ds_mask = mask_crop_cal(ds_regrid, crop_cal_data_50km)
+    for name in ['tasmax']:
+        cfg.weather.parameter = name
+        files = fetch_MSWX(cfg)
+        dset_weather = load_MSWX(cfg,files)
+        # ds_regrid = regrid(ds, yield_data)
+        # yield_regrid = regrid(yield_data,ds)
+        crop_cal_data_10km = regrid(crop_cal_data, dset_weather)
+
+        ds_mask = mask_crop_cal(dset_weather, crop_cal_data_10km)
 
         # Ensure consistent units
-        if attrs.var_name == 'precipitation':
+        if name == 'pr':
             ds_mask.attrs['units'] = 'mm/day'
-        elif attrs.var_name == 'air_temperature':
+        elif name in ['tasmax', 'tasmin', 'tas']:
             ds_mask.attrs['units'] = 'degC'
 
         # Store single variable dataset
         climate_data[name] = ds_mask
 
-    for index_cfg in cfg.indices.tas:
+    for index_cfg in cfg.mappings.indices:
         name = index_cfg.name
         func_path = index_cfg.function
         args = dict(index_cfg.args)
@@ -64,6 +68,7 @@ def main(cfg: DictConfig):
 
         # Multiple variable support
         if hasattr(index_cfg, "variables"):
+            ipdb.set_trace()
             inputs = [climate_data[v] for v in index_cfg.variables]
             result = func(*inputs, **args)
         else:
@@ -77,7 +82,8 @@ def main(cfg: DictConfig):
             end=cfg.output.end,
             freq=freq
         )
-        result.to_zarr(zarr_filename, mode="w")
+        os.makedirs("data/10km/",exist_ok=True)
+        result.to_zarr("data/10km/"+zarr_filename, mode="w")
 
 if __name__ == "__main__":
     main()

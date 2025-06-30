@@ -1,36 +1,3 @@
-index_name: Rx1day
-
-dataset:
-  bounds: &europe_bounds
-    lat_min: -90.0
-    lat_max: 90.0
-    lon_min: -180.0
-    lon_max: 180.0
-  GDHY:
-    path: /beegfs/muduchuru/data/GDHY
-    bounds: *europe_bounds
-  SAGE:
-    path: "/beegfs/muduchuru/data/SAGE_crop_calendar/Wheat.crop.calendar.fill.nc.gz"
-    bounds: *europe_bounds
-  MSWX:
-    bounds: *europe_bounds
-    zarr_store: /beegfs/muduchuru/data/MSWX/zarr_store
-    variables:
-      pr:
-        path: '/beegfs/muduchuru/data/MSWX/pr'
-        var_name: precipitation
-      tasmin:
-        path: '/beegfs/muduchuru/data/MSWX/tasmin'
-        var_name: air_temperature
-      tasmax:
-        path: '/beegfs/muduchuru/data/MSWX/tasmax'
-        var_name: air_temperature
-      tas:
-        path: '/beegfs/muduchuru/data/MSWX/tas'
-        var_name: air_temperature
-    time_range:
-      start: "1979-01-01"
-      end: "2020-12-31"
 
 indices:
   - name: daily_pr_intensity
@@ -372,8 +339,3 @@ indices:
             q: 0.10
             dim: time
             keep_attrs: true
-              
-output:
-  zarr_pattern: "{name}_{start}-{end}_{freq}.zarr"
-  start: 1989
-  end: 2019

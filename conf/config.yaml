@@ -1,0 +1,28 @@
+
+defaults:
+  - _self_
+  - mappings/parameters
+  - mappings/indices
+index_name: Rx1day  
+dataset: mswx
+
+data_dir: /beegfs/muduchuru/data
+
+weather:
+  parameter: tasmax  # standardized variable name (e.g., tas, pr, rsds)
+
+bounds: &region_bounds
+  region: global
+  lat_min: -90.0
+  lat_max: 90.0
+  lon_min: -180.0
+  lon_max: 180.0
+
+time_range:
+  start_date: "2003-01-01"
+  end_date: "2003-01-04"
+
+output:
+  out_dir: "./data/"
+  filename: "{index}_{dataset}_{region}_{start}_{end}.csv"
+  format: 'netcdf' # 'standard', 'ICASA', 'simplace', 'monica'
