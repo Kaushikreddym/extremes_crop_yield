@@ -34,6 +34,7 @@ from bs4 import BeautifulSoup
 import concurrent.futures
 
 import gzip
+from utils.utils import *
 
 warnings.filterwarnings("ignore", category=Warning)
 
@@ -96,14 +97,11 @@ import geopandas as gpd
 
 import dask
 from dask.diagnostics import ProgressBar
-from dask.distributed import Client, LocalCluster
+# from dask.distributed import Client, LocalCluster
 
 
 def MSWX_to_zarr(cfg: DictConfig):
     warnings.filterwarnings("ignore")
-
-    cluster = LocalCluster(n_workers=80, threads_per_worker=1, memory_limit='80GB')
-    client = Client(cluster)
 
     europe_bounds = cfg.dataset.MSWX.bounds
     mswx_path = cfg.dataset.MSWX.variables
@@ -259,7 +257,9 @@ def load_MSWX(var_cfg: DictConfig, files):
     param_mapping = var_cfg.mappings
     provider = var_cfg.dataset.lower()
     parameter_key = var_cfg.weather.parameter
-
+    region = var_cfg.region
+    bounds = var_cfg.bounds[region]
+    
     param_info = param_mapping[provider]['variables'][parameter_key]
     output_dir = var_cfg.data_dir
     valid_dsets = []
@@ -267,6 +267,7 @@ def load_MSWX(var_cfg: DictConfig, files):
         local_path = os.path.join(output_dir, provider, parameter_key, f)
         try:
             ds = xr.open_dataset(local_path, chunks='auto', engine='netcdf4')[param_info.name]
+            ds = subset_by_bounds(ds, bounds, lat_name='lat', lon_name='lon')
             valid_dsets.append(ds)
         except Exception as e:
             print(f"Skipping file due to error: {f}\n{e}")

@@ -1,11 +1,13 @@
 from omegaconf import OmegaConf
+import hydra
+from pathlib import Path
 
-cfg = OmegaConf.load("conf/config_datasets.yaml")
+@hydra.main(config_path="conf", config_name="config", version_base=None)
+def main(cfg):
+    all_names = [index.name for index in cfg.mappings.indices]
+    
+    for name in sorted(set(all_names)):
+        print(name)
 
-all_names = []
-for category in ['tas']:
-    for index in cfg.indices[category]:
-        all_names.append(index.name)
-
-for name in sorted(set(all_names)):
-    print(name)
+if __name__ == "__main__":
+    main()

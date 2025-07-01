@@ -3,15 +3,15 @@ from omegaconf import DictConfig
 from datasets.datasets import *
 from utils.utils import *
 import importlib
-from dask.distributed import Client, performance_report
+# from dask.distributed import Client, performance_report
 import ipdb
 
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
 def main(cfg: DictConfig):
     # Set up Dask client (adapt based on your HPC environment)
-    client = Client(n_workers=40, threads_per_worker=2, memory_limit="80GB")  # ~80 logical cores
-
-    bounds = cfg.bounds
+    client = Client(n_workers=40, threads_per_worker=2, memory_limit="20GB")  # ~80 logical cores
+    region = cfg.region
+    bounds = cfg.bounds[region]
     # Load primary datasets
     # yield_data = load_GDHY(cfg.dataset.GDHY.path, bounds)
     crop_cal_data = load_SAGE(cfg.mappings.SAGE.path, bounds)
@@ -19,7 +19,7 @@ def main(cfg: DictConfig):
 
     # Load and regrid climate data
     climate_data = {}
-    for name in ['tasmax']:
+    for name in ['pr','tas','tasmax','tasmin']:
         cfg.weather.parameter = name
         files = fetch_MSWX(cfg)
         dset_weather = load_MSWX(cfg,files)
@@ -39,6 +39,8 @@ def main(cfg: DictConfig):
         climate_data[name] = ds_mask
 
     for index_cfg in cfg.mappings.indices:
+        if index_cfg.name != cfg.index_name:
+            continue
         name = index_cfg.name
         func_path = index_cfg.function
         args = dict(index_cfg.args)
@@ -68,7 +70,6 @@ def main(cfg: DictConfig):
 
         # Multiple variable support
         if hasattr(index_cfg, "variables"):
-            ipdb.set_trace()
             inputs = [climate_data[v] for v in index_cfg.variables]
             result = func(*inputs, **args)
         else:
@@ -76,11 +77,13 @@ def main(cfg: DictConfig):
         # ipdb.set_trace()
         # Save result to zarr
         freq = args.get("freq", "YS")
-        zarr_filename = cfg.output.zarr_pattern.format(
-            name=name,
-            start=cfg.output.start,
-            end=cfg.output.end,
-            freq=freq
+        zarr_filename = cfg.output.filename.format(
+            index=name,
+            dataset=cfg.dataset,
+            region=cfg.bounds.region,
+            start=cfg.time_range.start_date,
+            end=cfg.time_range.end_date,
+            freq=freq,
         )
         os.makedirs("data/10km/",exist_ok=True)
         result.to_zarr("data/10km/"+zarr_filename, mode="w")
