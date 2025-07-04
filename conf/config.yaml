@@ -24,7 +24,7 @@ bounds:
     lon_max: 45.0     # Eastern Europe (Ural Mountains, excludes most of Russia)
 
 time_range:
-  start_date: "1989-01-02"
+  start_date: "1989-01-01"
   end_date: "2024-12-31"
 
 output:

@@ -5,7 +5,7 @@ mkdir -p logs
 for index in $(python list_indices.py); do
     sbatch <<EOF
 #!/bin/bash
-#SBATCH --job-name=clim_idx_$index
+#SBATCH --job-name=$index
 #SBATCH --output=logs/${index}.out
 #SBATCH --error=logs/${index}.err
 #SBATCH --ntasks=1

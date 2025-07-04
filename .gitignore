@@ -189,6 +189,8 @@ cython_debug/
 
 *.zarr
 *.ipynb
+*.out
+*.err
 outputs/
 logs/
 misc/

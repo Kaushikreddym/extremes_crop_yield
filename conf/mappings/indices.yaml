@@ -104,27 +104,27 @@ indices:
     variables: [pr]
     args:
       freq: 'YS'
-  - name: SPI1
-    function: xclim.indices.standardized_precipitation_index
-    variables: [pr]
-    args:
-      freq: 'MS'
-      window: 1
-      dist: 'gamma'
-  - name: SPI3
-    function: xclim.indices.standardized_precipitation_index
-    variables: [pr]
-    args:
-      freq: 'MS'
-      window: 3
-      dist: 'gamma'
-  - name: SPI6
-    function: xclim.indices.standardized_precipitation_index
-    variables: [pr]
-    args:
-      freq: 'MS'
-      window: 6
-      dist: 'gamma'
+  # - name: SPI1
+  #   function: xclim.indices.standardized_precipitation_index
+  #   variables: [pr]
+  #   args:
+  #     freq: 'MS'
+  #     window: 1
+  #     dist: 'gamma'
+  # - name: SPI3
+  #   function: xclim.indices.standardized_precipitation_index
+  #   variables: [pr]
+  #   args:
+  #     freq: 'MS'
+  #     window: 3
+  #     dist: 'gamma'
+  # - name: SPI6
+  #   function: xclim.indices.standardized_precipitation_index
+  #   variables: [pr]
+  #   args:
+  #     freq: 'MS'
+  #     window: 6
+  #     dist: 'gamma'
   - name: wet_spell_frequency
     function: xclim.indices.wet_spell_frequency
     variables: [pr]
