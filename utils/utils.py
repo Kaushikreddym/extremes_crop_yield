@@ -4,6 +4,7 @@ import numpy as np
 
 from dask.diagnostics import ProgressBar
 from dask.distributed import Client, LocalCluster
+import os
 
 def convert_longitude_to_minus180_180(ds):
     ds = ds.assign_coords(lon=(((ds.lon + 180) % 360) - 180))
@@ -97,3 +98,39 @@ def setup_slurm_cluster():
     client = Client(cluster)
     print("Dask dashboard:", client.dashboard_link)
     return client
+
+def zarr_exists_with_bounds_and_time(zarr_path: str, time_range: dict, bounds: dict) -> bool:
+    """
+    Check if a Zarr store already exists with the specified time range and bounding box.
+    """
+    if not os.path.exists(zarr_path):
+        return False
+
+    try:
+        print(f"loading the existing zarr store")
+        ds = xr.open_zarr(zarr_path, consolidated=False)
+
+        # Time range check
+        start_time = str(ds.time[0].values)[:10]
+        end_time = str(ds.time[-1].values)[:10]
+        time_match = (
+            start_time >= time_range['start_date'] and
+            end_time <= time_range['end_date']
+        )
+        # Spatial bounds check
+        buffer = 0.2
+        lat = ds['lat']
+        lon = ds['lon']
+        lat_match = (
+            float(lat.min()) >= bounds['lat_min'] - buffer and
+            float(lat.max()) <= bounds['lat_max'] + buffer
+        )
+        lon_match = (
+            float(lon.min()) >= bounds['lon_min'] - buffer and
+            float(lon.max()) <= bounds['lon_max'] + buffer
+        )
+        return time_match and lat_match and lon_match
+
+    except Exception as e:
+        print(f"⚠️ Could not validate existing Zarr: {zarr_path}\n{e}")
+        return False

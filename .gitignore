@@ -191,6 +191,7 @@ cython_debug/
 *.ipynb
 *.out
 *.err
+*.vscode
 outputs/
 logs/
 misc/
