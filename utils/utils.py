@@ -6,6 +6,21 @@ from dask.diagnostics import ProgressBar
 from dask.distributed import Client, LocalCluster
 import os
 
+# utils/logging_config.py
+import logging
+
+def get_logger(name=__name__):
+    logger = logging.getLogger(name)
+    logger.setLevel(logging.INFO)
+
+    if not logger.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
+    return logger
+
 def convert_longitude_to_minus180_180(ds):
     ds = ds.assign_coords(lon=(((ds.lon + 180) % 360) - 180))
     ds = ds.sortby('lon')

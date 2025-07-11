@@ -30,4 +30,7 @@ time_range:
 output:
   out_dir: "./data/"
   filename: "{index}_{dataset}_{region}_{start}_{end}_{freq}_10km.zarr"
+  filename_index: "{index}_{dataset}_{region}_{start}_{end}_{freq}_10km.parquet"
   format: 'netcdf' # 'standard', 'ICASA', 'simplace', 'monica'
+
+model: dnn

@@ -3,6 +3,7 @@ import importlib
 from copy import deepcopy
 from pathlib import Path
 import xarray as xr
+from xclim.core.calendar import percentile_doy
 
 class extreme_index:
     def __init__(self, cfg, climate_data):
@@ -25,19 +26,36 @@ class extreme_index:
 
     def calculate(self, index):
         index_cfg = self.cfg.mappings.indices[index]
-        # local_climate_data = deepcopy(self.climate_data)
         args = dict(index_cfg.args)
 
-        # Handle preprocessing
-        if "preprocess" in index_cfg:
-            for _, variables in index_cfg.preprocess.items():
-                for var_name, task in variables.items():
-                    input_var = self.climate_data[task["input"]]
-                    op = getattr(input_var, task["operation"])
-                    result = op(**task.get("kwargs", {}))
-                    if "aggregation" in task:
-                        result = getattr(result, task["aggregation"])()
-                    self.climate_data[var_name] = result
+        # Handle linked intermediate variables
+        if "link" in index_cfg:
+            for var_name, link_cfg in index_cfg.link.items():
+                # --- External function call ---
+                if "function_call" in link_cfg:
+                    inputs = [self.climate_data[name] for name in link_cfg["inputs"]]
+                    module_path, func_name = link_cfg["function_call"].rsplit(".", 1)
+                    func = getattr(importlib.import_module(module_path), func_name)
+                    result = func(*inputs, **link_cfg.get("kwargs", {}))
+
+                # --- Method call on single input ---
+                elif "operation" in link_cfg:
+                    input_var = self.climate_data[link_cfg["input"]]
+                    method = getattr(input_var, link_cfg["operation"])
+                    result = method(**link_cfg.get("kwargs", {}))
+
+                else:
+                    raise ValueError(f"Link for '{var_name}' must define either 'function_call' or 'operation'.")
+
+                # Optional postprocessing
+                if "postprocess" in link_cfg:
+                    for op_name, op_args in link_cfg["postprocess"].items():
+                        if op_name == "sel":
+                            result = result.sel(**op_args)
+                        else:
+                            raise NotImplementedError(f"Postprocess operation '{op_name}' not supported.")
+
+                self.climate_data[var_name] = result
 
         # Resolve references in args
         for key, val in args.items():
@@ -45,27 +63,33 @@ class extreme_index:
                 ref = val.strip("${}").split(".")[-1]
                 args[key] = self.climate_data[ref]
 
-        # Load function
+        # Load and call final function
         module_name, func_name = index_cfg.function.rsplit(".", 1)
         func = getattr(importlib.import_module(module_name), func_name)
 
-        # Call function
         if hasattr(index_cfg, "variables"):
             inputs = [self.climate_data[v] for v in index_cfg.variables]
             result = func(*inputs, **args)
         else:
             result = func(self.climate_data["pr"], **args)
 
+        # ✅ Rename output DataArray
+        if isinstance(result, xr.DataArray):
+            result.name = index
+
+        result = result.chunk({'time':12,'lat':-1,'lon':-1})  # trigger chunking if needed
+        
         # Save result
         zarr_path = self.zarr_output_path(index)
         os.makedirs(zarr_path.parent, exist_ok=True)
         result.to_zarr(str(zarr_path), mode="w")
 
+
     def run(self):
-        for index in list(cfg.mappings.indices.keys()):
+        for index in list(self.cfg.mappings.indices.keys()):
             zarr_path = self.zarr_output_path(index)
             if zarr_path.exists():
-                print(f"Skipping {index.name}: Zarr already exists at {zarr_path}")
+                print(f"Skipping {index}: Zarr already exists at {zarr_path}")
                 continue
             try:
                 print(f"Processing index: {index}")

@@ -58,29 +58,27 @@ indices:
     variables: [pr, p75]
     args:
       freq: 'YS'
-    preprocess:
-      quantiles:
-        p75:
-          input: pr
-          operation: quantile
-          kwargs:
-            q: 0.75
-            dim: time
-            keep_attrs: true
+    link:
+      p75:
+        input: pr
+        operation: quantile
+        kwargs:
+          q: 0.75
+          dim: time
+          keep_attrs: true
   f75p:
     function: xclim.indices.fraction_over_precip_thresh
     variables: [pr, p75]
     args:
       freq: 'YS'
-    preprocess:
-      quantiles:
-        p75:
-          input: pr
-          operation: quantile
-          kwargs:
-            q: 0.75
-            dim: time
-            keep_attrs: true
+    link:
+      p75:
+        input: pr
+        operation: quantile
+        kwargs:
+          q: 0.75
+          dim: time
+          keep_attrs: true
   max_cdd:
     function: xclim.indices.maximum_consecutive_dry_days
     variables: [pr]
@@ -239,7 +237,7 @@ indices:
     variables: [pr, tasmax, pr_annual]
     args:
       freq: 'YS'
-    preprocess:
+    link:
       annual:
         pr_annual:
           input: pr
@@ -271,34 +269,32 @@ indices:
     variables: [tas]
     args:
       freq: 'YS'
-  tg_10p:
-    function: xclim.indices.tg_10p
+  tg10p:
+    function: xclim.indices.tg10p
     variables: [tas, tas_per]
     args:
       freq: 'YS'
-    preprocess:
-      quantiles:
-        tas_per:
-          input: tas
-          operation: quantile
-          kwargs:
-            q: 0.10
-            dim: time
-            keep_attrs: true
-  tg_90p:
-    function: xclim.indices.tg_90p
+    link:
+      tas_per:
+        input: tas
+        operation: quantile
+        kwargs:
+          q: 0.10
+          dim: time
+          keep_attrs: true
+  tg90p:
+    function: xclim.indices.tg90p
     variables: [tas,tas_per]
     args:
       freq: 'YS'
-    preprocess:
-      quantiles:
-        tas_per:
-          input: tas
-          operation: quantile
-          kwargs:
-            q: 0.90
-            dim: time
-            keep_attrs: true 
+    link:
+      tas_per:
+        input: tas
+        operation: quantile
+        kwargs:
+          q: 0.90
+          dim: time
+          keep_attrs: true 
   tg_days_above_10degC:
     function: xclim.indices.tg_days_above
     variables: [tas]
@@ -326,16 +322,17 @@ indices:
       op: coldest
       freq: YS
   tn10p:
-    function: xclim.indices.tn_10p
+    function: xclim.indices.tn10p
     variables: [tasmin, tasmin_per]
     args:
-      freq: 'YS'
-    preprocess:
-      quantiles:
-        tasmin_per:
-          input: tasmin
-          operation: quantile
-          kwargs:
-            q: 0.10
-            dim: time
-            keep_attrs: true
+      freq: YS
+    link:
+      tasmin_per:
+        function_call: xclim.core.calendar.percentile_doy
+        inputs: [tasmin]
+        kwargs:
+          per: 10
+        postprocess:
+          sel:
+            percentiles: 10
+

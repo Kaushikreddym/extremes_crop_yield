@@ -28,9 +28,6 @@ from datasets.datasets import *
 from datasets.MSWX import *
 from utils.utils import *
 from datasets.indices import *
-
-# from dask.distributed import Client, performance_report
-# client = Client(n_workers=20, threads_per_worker=2, memory_limit="80GB")  # ~80 logical cores
     
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
 def main(cfg: DictConfig):
@@ -71,6 +68,12 @@ def main(cfg: DictConfig):
         
         
     indices = extreme_index(cfg, climate_data)
-    indices.calculate('heat_wave_max_length')
+    # indices.calculate('tn10p')
+    indices.run()
 if __name__ == "__main__":
+    from dask.distributed import Client, performance_report
+    client = Client(n_workers=20, threads_per_worker=2, memory_limit="80GB")  # ~80 logical cores
+
+    import multiprocessing
+    multiprocessing.freeze_support()
     main()
