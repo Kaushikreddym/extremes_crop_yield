@@ -49,7 +49,10 @@ def get_yield_data(filepath):
     ds = ds.expand_dims(time=[time])
     ds = ds.assign_coords(time=("time", [time]))
     return ds
-
+def convert_longitude_to_minus180_180(ds):
+    ds = ds.assign_coords(lon=(((ds.lon + 180) % 360) - 180))
+    ds = ds.sortby('lon')
+    return ds
 def load_GDHY(data_path, bounds):
 
     GDHY_crops_path = [d for d in glob(os.path.join(data_path, '*')) if os.path.isdir(d)]

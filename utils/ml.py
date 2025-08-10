@@ -8,8 +8,6 @@ from sklearn.preprocessing import RobustScaler
 from xgboost import XGBRegressor
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error, mean_absolute_percentage_error
 
-logger = get_logger("ml")
-
 def preprocess_dataframe(df, indices, yield_col):
     df = df.copy()
 
@@ -19,7 +17,7 @@ def preprocess_dataframe(df, indices, yield_col):
 
     # Drop rows with NaN in any of the specified columns
     drop_cols = indices + [yield_col]
-    df = df.dropna(subset=drop_cols)
+    df = df[['time','lat','lon'] + indices + [yield_col]].dropna(subset=drop_cols)
 
     # 2. Add year column
     df['year'] = pd.to_datetime(df['time']).dt.year
@@ -162,6 +160,7 @@ def robust_scale_train_test(train_df, test_df):
     return scaled_train, scaled_test
 
 def make_objective_xgb(df, indices, target_col, group_index):
+    logger = get_logger("ml", 'xgboost')
     def objective(trial):
         params = {
             "max_depth": trial.suggest_int("max_depth", 4, 10),
@@ -212,6 +211,7 @@ def make_objective_xgb(df, indices, target_col, group_index):
 from sklearn.ensemble import RandomForestRegressor
 
 def make_objective_rf(df, indices, target_col, group_index):
+    logger = get_logger("ml", 'random_forest')
     def objective(trial):
         params = {
             "n_estimators": trial.suggest_int("n_estimators", 100, 500),
@@ -270,7 +270,7 @@ class SimpleMLP(nn.Module):
 
 def make_objective_dnn(df, indices, target_col, group_index):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
+    logger = get_logger("ml", 'dnn')
     def objective(trial):
         hidden_dims = [trial.suggest_int("hidden_dim_1", 32, 256)]
         if trial.suggest_categorical("use_second_layer", [True, False]):

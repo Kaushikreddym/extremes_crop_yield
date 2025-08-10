@@ -5,28 +5,39 @@ import numpy as np
 from dask.diagnostics import ProgressBar
 from dask.distributed import Client, LocalCluster
 import os
+from glob import glob
+from datasets.datasets import *
 
 # utils/logging_config.py
-import logging
 
-def get_logger(name=__name__):
-    logger = logging.getLogger(name)
+import logging
+import os
+
+def get_logger(name=__name__, model="default"):
+    logger = logging.getLogger(f"{name}_{model}")
     logger.setLevel(logging.INFO)
 
+    log_dir = "logs"
+    os.makedirs(log_dir, exist_ok=True)
+    log_file = os.path.join(log_dir, f"{model}_optuna.log")
+
     if not logger.handlers:
-        handler = logging.StreamHandler()
-        formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
-        logger.addHandler(handler)
+        # Stream handler for console output
+        stream_handler = logging.StreamHandler()
+        stream_formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(message)s')
+        stream_handler.setFormatter(stream_formatter)
+        logger.addHandler(stream_handler)
+
+        # File handler for saving logs
+        file_handler = logging.FileHandler(log_file)
+        file_formatter = logging.Formatter('[%(asctime)s] %(levelname)s - %(message)s')
+        file_handler.setFormatter(file_formatter)
+        logger.addHandler(file_handler)
 
     return logger
 
-def convert_longitude_to_minus180_180(ds):
-    ds = ds.assign_coords(lon=(((ds.lon + 180) % 360) - 180))
-    ds = ds.sortby('lon')
-    return ds
 def regrid(ds_source,ds_target):
-    regridder = xe.Regridder(ds_source, ds_target, method="bilinear")
+    regridder = xe.Regridder(ds_source, ds_target, method='nearest_s2d')
     ds_regrid = regridder(ds_source)
     return ds_regrid
 def mask_crop_cal(ds_source,ds_target):
@@ -149,3 +160,29 @@ def zarr_exists_with_bounds_and_time(zarr_path: str, time_range: dict, bounds: d
     except Exception as e:
         print(f"⚠️ Could not validate existing Zarr: {zarr_path}\n{e}")
         return False
+    
+def combine_yield_and_indices(cfg, parquet_path):
+    yield_data = load_GDHY(cfg.mappings.GDHY.path, cfg.bounds[cfg.region])
+
+    ind='*'
+    region = cfg.region
+    files = glob(f'data/10km/{ind}_mswx_{region}_1989-01-01_2024-12-31_YS_10km.zarr/')
+    indices = [f.split('/')[-2].split('_mswx_')[0] for f in files]
+
+    index_climate = []
+    for ind in indices:
+        print(f"Loading {ind} for {region}")
+        # Open the Zarr dataset
+        temp = xr.open_zarr(f'data/10km/{ind}_mswx_{region}_1989-01-01_2024-12-31_YS_10km.zarr/')
+        first_var = list(temp.data_vars.keys())[0]
+        temp = temp.rename({first_var: ind})
+        # Append to the list
+        index_climate.append(temp)
+        
+    index_climate = xr.merge(index_climate)
+    # import ipdb; ipdb.set_trace()
+    yield_data_10km = regrid(yield_data,index_climate)
+    yield_data_10km, index_climate = xr.align(yield_data_10km, index_climate)
+    df = xr.merge([index_climate,yield_data_10km]).to_dataframe().reset_index()
+    df.to_parquet(parquet_path)
+    return indices

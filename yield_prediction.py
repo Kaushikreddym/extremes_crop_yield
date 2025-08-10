@@ -16,6 +16,7 @@ from sklearn.metrics import (
     mean_absolute_percentage_error
 )
 from xgboost import XGBRegressor
+from sklearn.model_selection import train_test_split
 
 import optuna
 from optuna.samplers import TPESampler
@@ -29,39 +30,13 @@ from statsmodels.nonparametric.smoothers_lowess import lowess
 import geopandas as gpd
 import xarray as xr
 
-from datasets.datasets import *
+# from datasets.datasets import *
 from datasets.indices import *
 from utils.utils import *
 from utils.ml import *
 
 plt.rcParams['font.family'] = 'DeJavu Serif'
 plt.rcParams['font.serif'] = 'Times New Roman'
-
-def combine_yield_and_indices(cfg, parquet_path):
-    yield_data = load_GDHY(cfg.mappings.GDHY.path, cfg.bounds[cfg.region])
-
-    ind='*'
-    region = cfg.region
-    files = glob(f'data/10km/{ind}_mswx_{region}_1989-01-01_2024-12-31_YS_10km.zarr/')
-    indices = [f.split('/')[-2].split('_mswx_')[0] for f in files]
-
-    index_climate = []
-    for ind in indices:
-        print(f"Loading {ind} for {region}")
-        # Open the Zarr dataset
-        temp = xr.open_zarr(f'data/10km/{ind}_mswx_{region}_1989-01-01_2024-12-31_YS_10km.zarr/')
-        first_var = list(temp.data_vars.keys())[0]
-        temp = temp.rename({first_var: ind})
-        # Append to the list
-        index_climate.append(temp)
-        
-    index_climate = xr.merge(index_climate)
-    # import ipdb; ipdb.set_trace()
-    yield_data_10km = regrid(yield_data,index_climate)
-    yield_data_10km, index_climate = xr.align(yield_data_10km, index_climate)
-    df = xr.merge([index_climate,yield_data_10km]).to_dataframe().reset_index()
-    df.to_parquet(parquet_path)
-    return indices
 
 @hydra.main(config_path="conf", config_name="config", version_base="1.3")
 def main(cfg: DictConfig):
@@ -84,10 +59,19 @@ def main(cfg: DictConfig):
         indices = [f.split('/')[-2].split('_mswx_')[0] for f in files]
 
     df = pd.read_parquet(parquet_path, engine='pyarrow')
-    # import ipdb; ipdb.set_trace()
     df = preprocess_dataframe(df,indices,'wheat_winter')
+ 
+    unique_years = sorted(df['year'].unique())
+    n_test = int(len(unique_years) * 0.2)
+
+    test_years = unique_years[-n_test:] if n_test > 0 else []
+    train_years = unique_years[:-n_test] if n_test > 0 else unique_years
+
+    df_train = df[df['year'].isin(train_years)].copy()
+    df_test = df[df['year'].isin(test_years)].copy()
+
     group_index = leave_location_and_time_out_expanding_window(
-        data=df, 
+        data=df_train, 
         year_col='year',
         space_col='location',
         min_train_years=10,
@@ -109,10 +93,10 @@ def main(cfg: DictConfig):
         objective = make_objective_dnn(df, indices, target_col, group_index)
     else:
         raise ValueError(f"Unknown model: {model_name}")
-    logger = get_logger("main")
+    logger = get_logger("main",model_name)
 
     sampler = TPESampler(seed=42)
-    study = optuna.create_study(study_name="xgboost", sampler=sampler, direction="minimize")
+    study = optuna.create_study(study_name=model_name, sampler=sampler, direction="minimize")
 
     logger.info("Start optimization.")
 
